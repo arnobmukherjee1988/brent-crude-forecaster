@@ -6,3 +6,6 @@ scipy>=1.12.0
 yfinance>=0.2.37
 numba>=0.59.0
 requests>=2.31.0
+arch>=6.0.0
+hmmlearn>=0.3.0
+statsmodels>=0.14.0

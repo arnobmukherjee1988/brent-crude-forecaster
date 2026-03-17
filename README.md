@@ -1,25 +1,27 @@
 ## brent-crude-forecaster
 
-Monte Carlo simulation of Brent crude oil prices using the Merton jump-diffusion model.
-Built with Streamlit. Developed in the context of the 2026 US-Iran war and Strait of Hormuz disruption.
+Monte Carlo simulation of Brent crude oil prices using multiple stochastic models.
+Built with Streamlit. Developed in the context of the 2026 US-Iran geopolitical risk
+and Strait of Hormuz disruption scenarios.
 
 ---
 
 ### What it does
 
-- Fetches live Brent crude price data from Yahoo Finance
-- Calibrates a stochastic model from recent daily returns
-- Runs 50,000 simulated price paths across four geopolitical scenarios
-- Produces 3-month, 6-month, and 12-month price forecasts with confidence intervals
-- Computes risk metrics: Value at Risk, Conditional VaR, and threshold probabilities
+- Fetches live Brent crude price data via EIA API or FRED (with disk cache fallback)
+- Calibrates four models from historical daily returns: Merton jump-diffusion, GARCH(1,1)-Merton, OU mean-reverting, and plain GBM
+- Runs up to 50,000 Monte Carlo paths across four geopolitical scenarios
+- Produces 3, 6, and 12-month price forecasts with confidence intervals
+- Computes risk metrics: VaR, CVaR, and threshold exceedance probabilities
+- Compares all four models side by side on a dedicated tab
 
 ---
 
 ### Project structure
 
-    app.py              Main Streamlit dashboard
-    mc_engine.py        Monte Carlo simulation engine (Numba-compiled)
-    data_fetcher.py     Live data fetching and parameter calibration
+    app.py              Streamlit dashboard (5 tabs, dark/light mode)
+    mc_engine.py        Simulation engine (Numba-compiled, antithetic variates)
+    data_fetcher.py     Data fetching, GARCH/MLE/OU/GBM calibration
     requirements.txt    Python dependencies
 
 ---
@@ -29,60 +31,59 @@ Built with Streamlit. Developed in the context of the 2026 US-Iran war and Strai
     pip install -r requirements.txt
     streamlit run app.py
 
-The dashboard opens at http://localhost:8501
+Opens at http://localhost:8501
 
 ---
 
-### Deploy for free on Streamlit Community Cloud
+### Deploy on Streamlit Community Cloud
 
-1. Push this repository to GitHub
-2. Go to https://share.streamlit.io and sign in with GitHub
-3. Select this repository, set the main file to app.py
-4. Click Deploy
+1. Push to GitHub
+2. Go to https://share.streamlit.io, connect the repo, set main file to app.py
+3. Deploy
 
-Your app gets a permanent public URL at no cost. The free tier provides 1 GB RAM,
-which is sufficient for this simulation. The app sleeps after inactivity and wakes
-automatically when someone visits the URL.
-
-No server, no Docker, no payment required.
+Free tier (1 GB RAM) is sufficient.
 
 ---
 
-### Model
+### Models
 
-The price follows a Merton jump-diffusion process:
+Merton jump-diffusion (primary):
 
     dS = mu * S * dt  +  sigma * S * dW  +  S * dJ
 
-where dW is a Wiener process and dJ is a compound Poisson jump process.
-Parameters mu, sigma, mu_J, and sigma_J are calibrated from the most recent
-60 days of Brent closing prices. Jump intensity is scaled by scenario.
+where dJ is a compound Poisson process with log-normal jump sizes.
+
+GARCH(1,1)-Merton: time-varying conditional volatility fitted on percentage log-returns.
+
+OU mean-reverting: Ornstein-Uhlenbeck drift in log-price space, calibrated via OLS.
+
+GBM: constant-volatility baseline with no jumps.
+
+Parameters are calibrated via MLE (jumps) and GARCH(1,1) fitting (volatility).
+Jump parameters use the full available history; volatility uses a one-step-ahead GARCH forecast.
 
 ---
 
-### Geopolitical scenarios
+### Scenarios
 
-    Ceasefire (1-2 months)        default weight 25%
-    Prolonged war (4-6 months)    default weight 40%
-    Escalation (two straits)      default weight 25%
-    Extreme shock ($200+/bbl)     default weight 10%
+    Low disruption      25%
+    Base case           40%
+    High disruption     25%
+    Extreme shock       10%
 
-Scenario weights are adjustable in real time from the sidebar.
+Weights are adjustable in real time from the sidebar.
 
 ---
 
 ### Stack
 
-    Python 3.11+
-    Streamlit
-    NumPy, pandas, SciPy
-    Numba (JIT compilation for simulation speed)
+    Python 3.11+, Streamlit, NumPy, pandas, SciPy
+    Numba (JIT-compiled parallel simulation)
+    arch (GARCH fitting)
     Plotly (interactive charts)
-    yfinance (live market data)
 
 ---
 
 ### Disclaimer
 
-This project is for educational and research purposes only.
-It is not financial advice.
+For educational and research purposes only. Not financial advice.
