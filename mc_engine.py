@@ -1,6 +1,6 @@
 """
 Monte Carlo engine for Brent crude price forecasting.
-Merton jump-diffusion model with geopolitical scenario weighting.
+Merton jump-diffusion model with scenario weighting.
 """
 
 import numpy as np
@@ -82,7 +82,7 @@ def run_scenario(
     """
     Run simulation for one scenario. Returns terminal prices (shape: n_paths).
     """
-    base_lam = 0.6          # ~0.6 jumps/year baseline (elevated war regime)
+    base_lam = 0.6          # ~0.6 jumps/year baseline
     lam = base_lam * lam_multiplier
     n_steps = horizon_days
     paths = _simulate_paths(
@@ -97,10 +97,10 @@ def run_scenario(
 # ---------------------------------------------------------------------------
 
 SCENARIOS = {
-    "Ceasefire (1-2 months)":  {"lam_mult": 0.5,  "color": "#22c55e", "default_weight": 0.25},
-    "Prolonged war (4-6 months)": {"lam_mult": 1.0, "color": "#f59e0b", "default_weight": 0.40},
-    "Escalation (two straits)": {"lam_mult": 1.8,  "color": "#ef4444", "default_weight": 0.25},
-    "Extreme shock ($200+)":    {"lam_mult": 3.0,  "color": "#7c3aed", "default_weight": 0.10},
+    "Low disruption":          {"lam_mult": 0.5,  "color": "#22c55e", "default_weight": 0.25},
+    "Base case":               {"lam_mult": 1.0,  "color": "#f59e0b", "default_weight": 0.40},
+    "High disruption":         {"lam_mult": 1.8,  "color": "#ef4444", "default_weight": 0.25},
+    "Extreme shock":           {"lam_mult": 3.0,  "color": "#7c3aed", "default_weight": 0.10},
 }
 
 HORIZONS = {

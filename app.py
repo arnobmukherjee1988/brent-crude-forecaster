@@ -1,6 +1,6 @@
 """
 Brent Crude Price Forecaster
-Monte Carlo simulation with geopolitical scenario weighting.
+Monte Carlo simulation with scenario weighting.
 Streamlit dashboard — deployable on Streamlit Community Cloud (free).
 """
 
@@ -94,19 +94,7 @@ section[data-testid="stSidebar"] {
 .prob-low  { color: #3fb950; }
 h1 { font-family: 'Courier Prime', 'Courier New', monospace !important; letter-spacing: -0.02em; }
 h2, h3 { font-family: 'Times New Roman', Times, serif !important; font-weight: 700; }
-.war-badge {
-    display: inline-block;
-    background: #f851491a;
-    border: 1px solid #f85149;
-    color: #f85149;
-    border-radius: 4px;
-    padding: 2px 10px;
-    font-size: 0.75rem;
-    font-family: 'Courier Prime', 'Courier New', monospace;
-    letter-spacing: 0.05em;
-    margin-left: 10px;
-    vertical-align: middle;
-}
+
 .stSlider > div > div > div { background: #f0b429 !important; }
 div[data-testid="stMetric"] {
     background: #ffffff;
@@ -147,7 +135,7 @@ with st.sidebar:
     st.markdown("## 🛢️ Brent Crude Forecaster")
     st.markdown(
         "Monte Carlo simulation using Merton jump-diffusion. "
-        "Calibrated on live Brent data."
+        "Calibrated on live Brent crude data."
     )
     st.divider()
 
@@ -160,8 +148,8 @@ with st.sidebar:
     )
 
     st.divider()
-    st.markdown("### Geopolitical scenario weights")
-    st.caption("Drag to reflect your view on how the US-Iran conflict evolves.")
+    st.markdown("### Scenario weights")
+    st.caption("Drag to set the weight of each supply scenario.")
 
     scenario_weights = {}
     raw_weights = {}
@@ -231,12 +219,11 @@ def get_jump_params(df_json: str, threshold: float):
 # ---------------------------------------------------------------------------
 
 st.markdown(
-    "# Brent Crude Price Forecaster"
-    "<span class='war-badge'>US-IRAN WAR · LIVE</span>",
+    "# Brent Crude Price Forecaster",
     unsafe_allow_html=True,
 )
 st.caption(
-    "Merton jump-diffusion Monte Carlo · Geopolitical scenario weighting · "
+    "Merton jump-diffusion Monte Carlo · Scenario-weighted simulation · "
     "Live Brent crude data via EIA and FRED"
 )
 
@@ -255,25 +242,23 @@ mu_j   = jump_params["mu_j"]
 sigma_j = jump_params["sigma_j"]
 
 # ---------------------------------------------------------------------------
-# War-onset context strip
+# Key metrics strip
 # ---------------------------------------------------------------------------
 
-war_start = "2028-02-28"   # adjusted to match data availability
-war_df    = get_price_history_since(df, "2026-01-01")
 
 col1, col2, col3, col4 = st.columns(4)
-price_28feb = float(df[df.index >= "2026-02-27"]["Close"].iloc[0]) if len(df[df.index >= "2026-02-27"]) > 0 else 69.5
+price_ref   = float(df[df.index >= "2026-01-01"]["Close"].iloc[0]) if len(df[df.index >= "2026-01-01"]) > 0 else 69.5
 
 with col1:
-    delta = S0 - price_28feb
-    delta_pct = (delta / price_28feb) * 100
+    delta = S0 - price_ref
+    delta_pct = (delta / price_ref) * 100
     color = RED if delta > 0 else GREEN
     st.markdown(f"""
     <div class='metric-card'>
       <div class='metric-label'>Brent spot (latest)</div>
       <div class='metric-value'>${S0:.2f}</div>
       <div class='metric-delta' style='color:{color};'>
-        {"▲" if delta > 0 else "▼"} ${abs(delta):.2f} ({delta_pct:+.1f}%) since war onset
+        {"▲" if delta > 0 else "▼"} ${abs(delta):.2f} ({delta_pct:+.1f}%) year to date
       </div>
     </div>""", unsafe_allow_html=True)
 
@@ -392,7 +377,7 @@ with tab1:
     for level, label, col in [
         (100, "$100", "#4493f8"),
         (147, "$147 (2022 peak)", "#f85149"),
-        (200, "$200 (IRGC threat)", "#a371f7"),
+        (200, "$200 (extreme)", "#a371f7"),
     ]:
         fig_fan.add_hline(
             y=level, line_dash="dot", line_color=col, line_width=1,
@@ -439,14 +424,7 @@ with tab1:
             line=dict(color=AMBER, width=1.8),
             name="Brent close",
         ))
-        # Shade war period
-        if len(df[df.index >= "2026-02-28"]) > 0:
-            fig_hist.add_vrect(
-                x0="2026-02-28", x1=hist_recent.index[-1].strftime("%Y-%m-%d"),
-                fillcolor="rgba(248,81,73,0.08)", line_width=0,
-                annotation_text="War onset", annotation_position="top left",
-                annotation_font_color=RED, annotation_font_size=11,
-            )
+
         fig_hist.update_layout(
             **PLOTLY_BASE,
             title="Brent crude: last 12 months",
@@ -546,7 +524,7 @@ with tab3:
     metrics = [
         ("Prob. price above $100/bbl",      stats["prob_above_100"],   "%"),
         ("Prob. price above $147/bbl (2022 peak)", stats["prob_above_147"], "%"),
-        ("Prob. price above $200/bbl (IRGC threat)", stats["prob_above_200"], "%"),
+        ("Prob. price above $200/bbl (extreme scenario)", stats["prob_above_200"], "%"),
         ("Prob. price drops >30% from current", stats["prob_drop_30pct"], "%"),
     ]
     for label, val, unit in metrics:
