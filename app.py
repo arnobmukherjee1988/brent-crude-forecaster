@@ -142,24 +142,148 @@ else:
     GRID_CLR = "#e8e4de"
     INPUT_BG = "#ffffff"
 
-# Custom CSS with theme
+# Custom CSS with full theme coverage
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
 
+/* ---- Base ---- */
 html, body, [class*="css"] {{
     font-family: 'Times New Roman', Times, serif;
-    background-color: {BG};
     color: {TEXT};
 }}
-.stApp {{
-    background: {BG};
+.stApp, .main, .block-container {{
+    background: {BG} !important;
     color: {TEXT};
 }}
+
+/* ---- Header / toolbar strip ---- */
+header[data-testid="stHeader"],
+header[data-testid="stHeader"] > div,
+header[data-testid="stHeader"] > div > div {{
+    background: {BG} !important;
+    border-bottom: 1px solid {BORDER};
+}}
+header[data-testid="stHeader"] button {{
+    background: transparent !important;
+    color: {TEXT} !important;
+    border: none !important;
+}}
+header[data-testid="stHeader"] svg,
+header[data-testid="stHeader"] button svg {{
+    fill: {TEXT} !important;
+    color: {TEXT} !important;
+}}
+[data-testid="stToolbar"],
+[data-testid="stAppDeployButton"],
+[data-testid="stDeployButton"],
+[data-testid="stToolbarActions"] {{
+    background: {BG} !important;
+    color: {TEXT} !important;
+}}
+[data-testid="stToolbarActions"] svg,
+[data-testid="stAppDeployButton"] svg,
+[data-testid="stDeployButton"] svg {{
+    fill: {TEXT} !important;
+    color: {TEXT} !important;
+}}
+#MainMenu, #MainMenu button {{
+    background: transparent !important;
+    color: {TEXT} !important;
+}}
+#MainMenu svg, #MainMenu button svg {{
+    fill: {TEXT} !important;
+    color: {TEXT} !important;
+}}
+button[kind="header"],
+button[data-testid="stBaseButton-header"] {{
+    background: transparent !important;
+    color: {TEXT} !important;
+    border: none !important;
+}}
+button[kind="header"] svg,
+button[data-testid="stBaseButton-header"] svg {{
+    fill: {TEXT} !important;
+    color: {TEXT} !important;
+}}
+
+/* ---- Sidebar collapse / expand button — always visible ---- */
+[data-testid="collapsedControl"] {{
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 9999 !important;
+    background: {SIDEBAR} !important;
+    border: 1px solid {BORDER} !important;
+    border-radius: 0 4px 4px 0 !important;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.2) !important;
+    min-width: 28px !important;
+    min-height: 40px !important;
+}}
+[data-testid="collapsedControl"] svg {{
+    fill: {TEXT} !important;
+    color: {TEXT} !important;
+}}
+
+/* ---- Sidebar ---- */
 section[data-testid="stSidebar"] {{
-    background: {SIDEBAR};
+    background: {SIDEBAR} !important;
     border-right: 1px solid {BORDER};
 }}
+section[data-testid="stSidebar"] * {{
+    color: {TEXT} !important;
+}}
+section[data-testid="stSidebar"] .stSlider label,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span {{
+    color: {TEXT} !important;
+}}
+
+/* ---- Tabs ---- */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {{
+    background: {BG} !important;
+    border-bottom: 1px solid {BORDER};
+    overflow-x: auto;
+}}
+[data-testid="stTabs"] [data-baseweb="tab"] {{
+    background: transparent !important;
+    color: {MUTED} !important;
+    white-space: nowrap;
+}}
+[data-testid="stTabs"] [aria-selected="true"] {{
+    color: {TEXT} !important;
+    border-bottom: 2px solid #f0b429 !important;
+}}
+[data-testid="stTabPanel"] {{
+    background: {BG} !important;
+}}
+
+/* ---- Expanders ---- */
+[data-testid="stExpander"] {{
+    background: {CARD_BG} !important;
+    border: 1px solid {BORDER} !important;
+    border-radius: 8px;
+}}
+[data-testid="stExpander"] summary,
+[data-testid="stExpander"] summary span,
+[data-testid="stExpander"] summary > div,
+[data-testid="stExpander"] summary p,
+[data-testid="stExpander"] summary > div > p {{
+    color: {TEXT} !important;
+}}
+[data-testid="stExpander"] summary:hover,
+[data-testid="stExpander"] summary:hover span,
+[data-testid="stExpander"] summary:hover p {{
+    color: #f0b429 !important;
+    cursor: pointer;
+}}
+[data-testid="stExpander"] summary svg {{
+    fill: {TEXT} !important;
+}}
+
+/* ---- Metric cards (custom HTML) ---- */
 .metric-card {{
     background: {CARD_BG};
     border: 1px solid {BORDER};
@@ -185,6 +309,8 @@ section[data-testid="stSidebar"] {{
     font-size: 0.85rem;
     margin-top: 4px;
 }}
+
+/* ---- Risk cards ---- */
 .risk-card {{
     background: {CARD_BG};
     border: 1px solid {BORDER};
@@ -198,18 +324,90 @@ section[data-testid="stSidebar"] {{
 .prob-high {{ color: #f85149; }}
 .prob-med  {{ color: #f0b429; }}
 .prob-low  {{ color: #3fb950; }}
-h1 {{ font-family: 'Courier Prime', 'Courier New', monospace !important; letter-spacing: -0.02em; color: {TEXT}; }}
-h2, h3 {{ font-family: 'Times New Roman', Times, serif !important; font-weight: 700; color: {TEXT}; }}
-p, span, label {{ color: {TEXT}; }}
-.stMarkdown {{ color: {TEXT}; }}
-div[data-testid="stText"] {{ color: {TEXT}; }}
 
-.stSlider > div > div > div {{ background: #f0b429 !important; }}
+/* ---- Typography ---- */
+h1 {{ font-family: 'Courier Prime', 'Courier New', monospace !important;
+      letter-spacing: -0.02em; color: {TEXT} !important; }}
+h2, h3 {{ font-family: 'Times New Roman', Times, serif !important;
+           font-weight: 700; color: {TEXT} !important; }}
+h4 {{ color: {TEXT} !important; }}
+p, span, label {{ color: {TEXT}; }}
+.stMarkdown, .stMarkdown p, .stMarkdown span {{ color: {TEXT}; }}
+div[data-testid="stText"] {{ color: {TEXT}; }}
+div[data-testid="stCaptionContainer"] p {{ color: {MUTED} !important; }}
+
+/* ---- Native st.metric ---- */
 div[data-testid="stMetric"] {{
     background: {CARD_BG};
     border: 1px solid {BORDER};
     border-radius: 8px;
     padding: 14px 18px;
+}}
+div[data-testid="stMetric"] label,
+div[data-testid="stMetricLabel"] p {{
+    color: {MUTED} !important;
+}}
+div[data-testid="stMetricValue"] {{
+    color: {TEXT} !important;
+}}
+
+/* ---- Sliders and inputs ---- */
+.stSlider > div > div > div {{ background: #f0b429 !important; }}
+.stSelectSlider [data-baseweb="slider"] div {{ background: #f0b429 !important; }}
+[data-baseweb="input"] input, [data-baseweb="select"] {{
+    background: {INPUT_BG} !important;
+    color: {TEXT} !important;
+    border-color: {BORDER} !important;
+}}
+
+/* ---- Dividers ---- */
+hr {{ border-color: {BORDER} !important; opacity: 0.5; }}
+
+/* ---- Dataframes ---- */
+/* Only style the outer wrapper — let Streamlit's native renderer handle internal colours */
+[data-testid="stDataFrame"] {{
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    overflow-x: auto;
+}}
+
+/* ---- Info / alert boxes ---- */
+[data-testid="stInfo"] {{
+    background: {CARD_BG} !important;
+    border-color: {BORDER} !important;
+    color: {TEXT} !important;
+}}
+[data-testid="stInfo"] p {{ color: {TEXT} !important; }}
+
+/* ---- Mobile responsive ---- */
+@media (max-width: 768px) {{
+    /* Wrap metric columns 2×2 on tablet */
+    [data-testid="stHorizontalBlock"] {{
+        flex-wrap: wrap !important;
+    }}
+    [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] {{
+        flex: 1 1 48% !important;
+        min-width: 48% !important;
+    }}
+    .metric-value {{ font-size: 1.1rem; }}
+    .metric-card {{ padding: 10px 12px; }}
+    .metric-label {{ font-size: 0.65rem; }}
+    .metric-delta {{ font-size: 0.75rem; }}
+    .risk-card {{ flex-direction: column; align-items: flex-start; gap: 4px; }}
+    h1 {{ font-size: 1.3rem !important; }}
+    [data-testid="stTabs"] [data-baseweb="tab"] span {{ font-size: 0.75rem !important; }}
+}}
+@media (max-width: 480px) {{
+    .stApp .block-container {{ padding: 0.5rem 0.5rem 2rem !important; }}
+    .metric-card {{ padding: 8px 10px; }}
+    .metric-value {{ font-size: 1rem; }}
+    /* Single-column stack on phone */
+    [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] {{
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }}
+    [data-testid="stTabs"] [data-baseweb="tab"] span {{ font-size: 0.65rem !important; }}
+    [data-testid="stTabs"] [data-baseweb="tab"] {{ padding: 8px 6px !important; }}
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -219,14 +417,38 @@ div[data-testid="stMetric"] {{
 # Helper: Plotly dark layout defaults
 # ---------------------------------------------------------------------------
 
+_FONT = dict(family="Times New Roman, Times, serif", color=TEXT, size=12)
+# Base axis style — no 'title' key so callers can add it without collision
+_AXIS = dict(
+    gridcolor=GRID_CLR, linecolor=BORDER, showgrid=True,
+    tickfont=dict(family="Times New Roman, Times, serif", color=TEXT, size=11),
+    zerolinecolor=BORDER,
+)
+
+def _ax(title_text: str) -> dict:
+    """Return a fully-styled axis dict with the given title."""
+    return {
+        **_AXIS,
+        "title": dict(
+            text=title_text,
+            font=dict(family="Times New Roman, Times, serif", color=TEXT, size=12),
+        ),
+    }
+
+_MARGIN_DEFAULT = dict(l=60, r=110, t=60, b=60)
+_MARGIN_WIDE_R  = dict(l=60, r=155, t=60, b=60)   # charts with right-side annotations
+
 PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor=PLOT_BG,
-    font=dict(family="Times New Roman, Times, serif", color=TEXT, size=12),
-    xaxis=dict(gridcolor=GRID_CLR, linecolor=BORDER, showgrid=True),
-    yaxis=dict(gridcolor=GRID_CLR, linecolor=BORDER, showgrid=True),
-    margin=dict(l=50, r=20, t=40, b=40),
-    legend=dict(bgcolor="rgba(0,0,0,0)", bordercolor=BORDER, borderwidth=1),
+    font=_FONT,
+    # xaxis / yaxis / title / margin omitted — each chart passes them explicitly
+    legend=dict(
+        bgcolor=_hex_to_rgba(CARD_BG, 0.85),
+        bordercolor=BORDER,
+        borderwidth=1,
+        font=dict(family="Times New Roman, Times, serif", color=TEXT, size=11),
+    ),
 )
 
 AMBER  = "#f0b429"
@@ -357,17 +579,21 @@ with col1:
 with col2:
     st.markdown(f"""
     <div class='metric-card'>
-      <div class='metric-label'>Annualised vol (60-day)</div>
+      <div class='metric-label'>GARCH(1,1) annualised &sigma;</div>
       <div class='metric-value'>{sigma*100:.1f}%</div>
-      <div class='metric-delta' style='color:{MUTED};'>σ = {sigma:.4f} | μ = {mu:.4f}</div>
+      <div class='metric-delta' style='color:{MUTED};font-family:Courier Prime,Courier New,monospace;'>
+        &sigma; = {sigma:.4f} &nbsp;|&nbsp; &mu; = {mu:.4f}
+      </div>
     </div>""", unsafe_allow_html=True)
 
 with col3:
     st.markdown(f"""
     <div class='metric-card'>
-      <div class='metric-label'>GARCH(1,1) volatility</div>
-      <div class='metric-value'>{garch_params['sigma_garch']*100:.1f}%</div>
-      <div class='metric-delta' style='color:{MUTED};'>α={garch_params['alpha']:.3f} β={garch_params['beta']:.3f}</div>
+      <div class='metric-label'>GARCH(1,1) params</div>
+      <div class='metric-value' style='font-size:1.2rem;'>&alpha;={garch_params['alpha']:.3f} &nbsp;&beta;={garch_params['beta']:.3f}</div>
+      <div class='metric-delta' style='color:{MUTED};font-family:Courier Prime,Courier New,monospace;'>
+        &omega; = {garch_params['omega']:.4f}
+      </div>
     </div>""", unsafe_allow_html=True)
 
 with col4:
@@ -432,7 +658,7 @@ st.caption(f"Last simulation: {elapsed:.1f}s · {n_paths:,} paths · {horizon_la
 # ---------------------------------------------------------------------------
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📈 Fan chart", "📊 Distribution", "⚠️ Risk metrics", "🔬 Scenario comparison", "🧮 Model comparison"
+    "📈 Fan Chart", "📊 Distribution", "⚠️ Risk", "🔬 Scenarios", "🧮 Models"
 ])
 
 
@@ -449,35 +675,35 @@ with tab1:
 
     fig_fan = go.Figure()
 
-    # 90% band (p90-p95 outer)
+    # 90% band (p5–p95 outer)
     fig_fan.add_trace(go.Scatter(
         x=x_dates, y=fan["p95"], mode="lines",
         line=dict(width=0), showlegend=False, hoverinfo="skip",
     ))
     fig_fan.add_trace(go.Scatter(
         x=x_dates, y=fan["p5"], mode="lines",
-        fill="tonexty", fillcolor="rgba(240,180,41,0.04)",
-        line=dict(width=0), name="90% CI",
+        fill="tonexty", fillcolor="rgba(240,180,41,0.09)",
+        line=dict(width=0.8, color="rgba(240,180,41,0.35)"), name="90% CI",
     ))
-    # 75-90 band
+    # 75–90% band
     fig_fan.add_trace(go.Scatter(
         x=x_dates, y=fan["p90"] if "p90" in fan else fan["p75"], mode="lines",
         line=dict(width=0), showlegend=False, hoverinfo="skip",
     ))
     fig_fan.add_trace(go.Scatter(
         x=x_dates, y=fan["p10"] if "p10" in fan else fan["p25"], mode="lines",
-        fill="tonexty", fillcolor="rgba(240,180,41,0.10)",
-        line=dict(width=0), name="75-90 band",
+        fill="tonexty", fillcolor="rgba(240,180,41,0.16)",
+        line=dict(width=0.8, color="rgba(240,180,41,0.45)"), name="75–90% band",
     ))
-    # 50% band (IQR)
+    # 50% IQR band
     fig_fan.add_trace(go.Scatter(
         x=x_dates, y=fan["p75"], mode="lines",
         line=dict(width=0), showlegend=False, hoverinfo="skip",
     ))
     fig_fan.add_trace(go.Scatter(
         x=x_dates, y=fan["p25"], mode="lines",
-        fill="tonexty", fillcolor="rgba(240,180,41,0.20)",
-        line=dict(width=0), name="50% CI",
+        fill="tonexty", fillcolor="rgba(240,180,41,0.26)",
+        line=dict(width=0.8, color="rgba(240,180,41,0.55)"), name="50% IQR",
     ))
     # Median
     fig_fan.add_trace(go.Scatter(
@@ -508,11 +734,13 @@ with tab1:
 
     fig_fan.update_layout(
         **PLOTLY_BASE,
-        title=f"Brent crude price fan chart — {horizon_label} forecast",
-        yaxis_title="Price (USD/bbl)",
-        xaxis_title="Date",
+        title=dict(text=f"Brent crude — {horizon_label} price forecast",
+                   font=dict(color=TEXT, size=14)),
+        yaxis=_ax("Price (USD/bbl)"),
+        xaxis=_ax("Date"),
         height=480,
         hovermode="x unified",
+        margin=_MARGIN_WIDE_R,
     )
     # Thin x-axis ticks
     n_ticks = 8
@@ -538,9 +766,11 @@ with tab1:
 
         fig_hist.update_layout(
             **PLOTLY_BASE,
-            title="Brent crude: last 12 months",
-            yaxis_title="Price (USD/bbl)",
+            title=dict(text="Brent crude — last 12 months", font=dict(color=TEXT, size=14)),
+            yaxis=_ax("Price (USD/bbl)"),
+            xaxis=_ax("Date"),
             height=280,
+            margin=_MARGIN_DEFAULT,
         )
         st.plotly_chart(fig_hist, width='stretch')
 
@@ -574,27 +804,34 @@ with tab2:
         visible=False,
     ))
 
-    # Vertical lines for key levels
-    for level, col, lbl in [
-        (S0,  MUTED, f"Current ${S0:.0f}"),
-        (stats["p50"], AMBER, f"Median ${stats['p50']:.0f}"),
-        (100, BLUE,  "$100"),
-        (147, RED,   "$147"),
-        (200, PURPLE,"$200"),
-    ]:
+    # Vertical reference lines — staggered y-positions + x-shifts prevent label overlap
+    _vlines = [
+        (S0,             MUTED,   f"S₀ ${S0:.0f}",             0.97, 4),
+        (stats["p50"],   AMBER,   f"p₅₀ ${stats['p50']:.0f}",  0.80, 4),
+        (100,            BLUE,    "$100",                        0.89, 4),
+        (147,            RED,     "$147",                        0.70, 4),
+        (200,            PURPLE,  "$200",                        0.61, 4),
+    ]
+    for level, col, lbl, yref, xshift in _vlines:
         fig_dist.add_vline(
             x=level, line_dash="dot", line_color=col, line_width=1.5,
-            annotation_text=lbl, annotation_position="top",
-            annotation_font_color=col, annotation_font_size=11,
+            annotation_text=lbl,
+            annotation_yref="paper",
+            annotation_y=yref,
+            annotation_xshift=xshift,
+            annotation_font_color=col,
+            annotation_font_size=11,
         )
 
     fig_dist.update_layout(
         **PLOTLY_BASE,
         barmode="overlay",
-        title=f"Terminal price distribution — {horizon_label}",
-        xaxis_title="Brent price (USD/bbl)",
-        yaxis_title="Probability density",
+        title=dict(text=f"Terminal price distribution — {horizon_label}",
+                   font=dict(color=TEXT, size=14)),
+        xaxis=_ax("Brent price (USD/bbl)"),
+        yaxis=_ax("Probability density"),
         height=440,
+        margin=_MARGIN_DEFAULT,
     )
     st.plotly_chart(fig_dist, width='stretch')
 
@@ -633,10 +870,10 @@ with tab3:
         return "prob-low"
 
     metrics = [
-        ("Prob. price above $100/bbl",      stats["prob_above_100"],   "%"),
-        ("Prob. price above $147/bbl (2022 peak)", stats["prob_above_147"], "%"),
-        ("Prob. price above $200/bbl (extreme scenario)", stats["prob_above_200"], "%"),
-        ("Prob. price drops >30% from current", stats["prob_drop_30pct"], "%"),
+        ("P(S<sub>T</sub> &gt; $100/bbl)",                   stats["prob_above_100"],   "%"),
+        ("P(S<sub>T</sub> &gt; $147/bbl) &mdash; 2022 peak", stats["prob_above_147"],   "%"),
+        ("P(S<sub>T</sub> &gt; $200/bbl) &mdash; extreme",   stats["prob_above_200"],   "%"),
+        ("P(S<sub>T</sub> &le; 0.7 &sdot; S<sub>0</sub>) &mdash; drop &gt;30%", stats["prob_drop_30pct"], "%"),
     ]
     for label, val, unit in metrics:
         cls = prob_color(val)
@@ -678,10 +915,12 @@ with tab3:
     ))
     fig_wt.update_layout(
         **PLOTLY_BASE,
-        title="Scenario weight distribution",
-        yaxis_title="Weight (%)",
+        title=dict(text="Scenario weight distribution", font=dict(color=TEXT, size=14)),
+        yaxis=_ax("Weight (%)"),
+        xaxis=_ax(""),
         height=280,
         showlegend=False,
+        margin=_MARGIN_DEFAULT,
     )
     st.plotly_chart(fig_wt, width='stretch')
 
@@ -714,8 +953,12 @@ with tab4:
         horizon_medians = st.session_state["tab4_results"]
         horizon_labels = list(HORIZONS.keys())
 
+    # Show price label only at the terminal horizon — stagger vertically per trace
+    _terminal_offsets = ["top right", "bottom right", "top right", "bottom right"]
     fig_comp = go.Figure()
-    for name, medians in horizon_medians.items():
+    for idx, (name, medians) in enumerate(horizon_medians.items()):
+        # Empty labels for all but last point to eliminate mid-chart clutter
+        labels = [""] * (len(medians) - 1) + [f"${medians[-1]:.0f}"]
         fig_comp.add_trace(go.Scatter(
             x=horizon_labels,
             y=medians,
@@ -723,22 +966,25 @@ with tab4:
             name=name,
             line=dict(color=SCENARIOS[name]["color"], width=2),
             marker=dict(size=9),
-            text=[f"${m:.0f}" for m in medians],
-            textposition="top center",
-            textfont=dict(size=11, color=SCENARIOS[name]["color"]),
+            text=labels,
+            textposition=_terminal_offsets[idx % len(_terminal_offsets)],
+            textfont=dict(size=10, color=SCENARIOS[name]["color"]),
         ))
 
     fig_comp.add_hline(
         y=S0, line_dash="dot", line_color=MUTED,
-        annotation_text=f"  Current ${S0:.0f}",
+        annotation_text=f"  S₀ ${S0:.0f}",
         annotation_font_color=MUTED,
     )
     fig_comp.update_layout(
         **PLOTLY_BASE,
-        title="Median price forecast by scenario and horizon",
-        yaxis_title="Median price (USD/bbl)",
+        title=dict(text="Median price forecast by scenario and horizon",
+                   font=dict(color=TEXT, size=14)),
+        yaxis=_ax("Median price (USD/bbl)"),
+        xaxis=_ax("Horizon"),
         height=420,
         hovermode="x unified",
+        margin=_MARGIN_DEFAULT,
     )
     st.plotly_chart(fig_comp, width='stretch')
 
@@ -756,23 +1002,22 @@ with tab4:
     st.dataframe(detail_df, hide_index=True, width='stretch')
 
     st.divider()
-    st.markdown("#### Model equations")
-    st.latex(r"""
-    dS_t = \mu S_t \, dt + \sigma S_t \, dW_t + S_t \, dJ_t
-    """)
-    st.latex(r"""
-    S_{t+\Delta t} = S_t \cdot \exp\!\left[
-        \left(\mu - \tfrac{\sigma^2}{2} - \lambda\kappa\right)\Delta t
-        + \sigma\sqrt{\Delta t}\,Z_t
-        + \sum_{k=1}^{N_t} Y_k
-    \right]
-    """)
-    st.caption(
-        "where $Z_t \\sim \\mathcal{N}(0,1)$, "
-        "$N_t \\sim \\text{Poisson}(\\lambda \\Delta t)$, "
-        "$Y_k \\sim \\mathcal{N}(\\mu_J, \\sigma_J^2)$, "
-        "and $\\kappa = e^{\\mu_J + \\sigma_J^2/2} - 1$."
-    )
+    with st.expander("Merton jump-diffusion equations", expanded=False):
+        st.latex(r"dS_t = \mu S_t \, dt + \sigma S_t \, dW_t + S_t \, dJ_t")
+        st.latex(r"""
+        S_{t+\Delta t} = S_t \cdot \exp\!\Bigl[
+            \Bigl(\mu - \tfrac{\sigma^2}{2} - \lambda\kappa\Bigr)\Delta t
+            + \sigma\sqrt{\Delta t}\,Z_t
+            + \textstyle\sum_{k=1}^{N_t} Y_k
+        \Bigr]
+        """)
+        st.caption(
+            r"$Z_t \sim \mathcal{N}(0,1)$, "
+            r"$N_t \sim \mathrm{Poisson}(\lambda\,\Delta t)$, "
+            r"$Y_k \sim \mathcal{N}(\mu_J, \sigma_J^2)$, "
+            r"$\kappa = e^{\mu_J + \sigma_J^2/2} - 1$, "
+            r"$\lambda$ scaled by scenario multiplier."
+        )
 
 
 # ----- Tab 5: Model comparison ------------------------------------------------
@@ -872,11 +1117,13 @@ with tab5:
 
     fig_models.update_layout(
         **PLOTLY_BASE,
-        title=f"Model comparison: fan charts — {horizon_label} horizon",
-        yaxis_title="Price (USD/bbl)",
-        xaxis_title="Date",
+        title=dict(text=f"Model comparison — {horizon_label} horizon",
+                   font=dict(color=TEXT, size=14)),
+        yaxis=_ax("Price (USD/bbl)"),
+        xaxis=_ax("Date"),
         height=480,
         hovermode="x unified",
+        margin=_MARGIN_WIDE_R,
     )
 
     st.plotly_chart(fig_models, width='stretch')
