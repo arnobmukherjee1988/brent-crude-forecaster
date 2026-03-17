@@ -4,6 +4,7 @@ Monte Carlo simulation with geopolitical scenario weighting.
 Streamlit dashboard — deployable on Streamlit Community Cloud (free).
 """
 
+import io
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -40,47 +41,47 @@ st.set_page_config(
 # Custom CSS: dark petroleum aesthetic
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
 
 html, body, [class*="css"] {
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Times New Roman', Times, serif;
 }
 .stApp {
-    background: #0d1117;
-    color: #e6edf3;
+    background: #f9f7f4;
+    color: #1a1a1a;
 }
 section[data-testid="stSidebar"] {
-    background: #161b22;
-    border-right: 1px solid #30363d;
+    background: #f0ede8;
+    border-right: 1px solid #d4cfc8;
 }
 .metric-card {
-    background: #161b22;
-    border: 1px solid #30363d;
+    background: #ffffff;
+    border: 1px solid #d4cfc8;
     border-radius: 8px;
     padding: 16px 20px;
     margin-bottom: 10px;
 }
 .metric-value {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Courier Prime', 'Courier New', monospace;
     font-size: 1.6rem;
     font-weight: 600;
     color: #f0b429;
 }
 .metric-label {
     font-size: 0.75rem;
-    color: #8b949e;
+    color: #6b6560;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 4px;
 }
 .metric-delta {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Courier Prime', 'Courier New', monospace;
     font-size: 0.85rem;
     margin-top: 4px;
 }
 .risk-card {
-    background: #161b22;
-    border: 1px solid #30363d;
+    background: #ffffff;
+    border: 1px solid #d4cfc8;
     border-radius: 8px;
     padding: 14px 18px;
     margin-bottom: 8px;
@@ -91,8 +92,8 @@ section[data-testid="stSidebar"] {
 .prob-high { color: #f85149; }
 .prob-med  { color: #f0b429; }
 .prob-low  { color: #3fb950; }
-h1 { font-family: 'IBM Plex Mono', monospace !important; letter-spacing: -0.02em; }
-h2, h3 { font-family: 'IBM Plex Sans', sans-serif !important; font-weight: 600; }
+h1 { font-family: 'Courier Prime', 'Courier New', monospace !important; letter-spacing: -0.02em; }
+h2, h3 { font-family: 'Times New Roman', Times, serif !important; font-weight: 700; }
 .war-badge {
     display: inline-block;
     background: #f851491a;
@@ -101,15 +102,15 @@ h2, h3 { font-family: 'IBM Plex Sans', sans-serif !important; font-weight: 600; 
     border-radius: 4px;
     padding: 2px 10px;
     font-size: 0.75rem;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Courier Prime', 'Courier New', monospace;
     letter-spacing: 0.05em;
     margin-left: 10px;
     vertical-align: middle;
 }
 .stSlider > div > div > div { background: #f0b429 !important; }
 div[data-testid="stMetric"] {
-    background: #161b22;
-    border: 1px solid #30363d;
+    background: #ffffff;
+    border: 1px solid #d4cfc8;
     border-radius: 8px;
     padding: 14px 18px;
 }
@@ -123,10 +124,10 @@ div[data-testid="stMetric"] {
 
 PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="#0d1117",
-    font=dict(family="IBM Plex Sans, sans-serif", color="#e6edf3", size=12),
-    xaxis=dict(gridcolor="#21262d", linecolor="#30363d", showgrid=True),
-    yaxis=dict(gridcolor="#21262d", linecolor="#30363d", showgrid=True),
+    plot_bgcolor="#f9f7f4",
+    font=dict(family="Times New Roman, Times, serif", color="#1a1a1a", size=12),
+    xaxis=dict(gridcolor="#e8e4de", linecolor="#d4cfc8", showgrid=True),
+    yaxis=dict(gridcolor="#e8e4de", linecolor="#d4cfc8", showgrid=True),
     margin=dict(l=50, r=20, t=40, b=40),
     legend=dict(bgcolor="rgba(0,0,0,0)", bordercolor="#30363d", borderwidth=1),
 )
@@ -198,7 +199,7 @@ with st.sidebar:
     )
 
     st.divider()
-    run_button = st.button("Run simulation", type="primary", use_container_width=True)
+    run_button = st.button("Run simulation", type="primary", width="stretch")
 
 
 # ---------------------------------------------------------------------------
@@ -213,14 +214,14 @@ def load_data():
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_gbm_params(df_json: str, window: int = 60):
-    df = pd.read_json(df_json)
+    df = pd.read_json(io.StringIO(df_json))
     df.index = pd.to_datetime(df.index)
     return calibrate_gbm(df, window=window)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_jump_params(df_json: str, threshold: float):
-    df = pd.read_json(df_json)
+    df = pd.read_json(io.StringIO(df_json))
     df.index = pd.to_datetime(df.index)
     return calibrate_jumps(df, jump_threshold=threshold)
 
@@ -236,7 +237,7 @@ st.markdown(
 )
 st.caption(
     "Merton jump-diffusion Monte Carlo · Geopolitical scenario weighting · "
-    "Live Brent crude data via Yahoo Finance"
+    "Live Brent crude data via EIA and FRED"
 )
 
 # Load data
@@ -425,7 +426,7 @@ with tab1:
         ticktext=x_dates[::tick_step],
         tickangle=-30,
     )
-    st.plotly_chart(fig_fan, use_container_width=True)
+    st.plotly_chart(fig_fan, width="stretch")
 
     # Historical context chart below
     with st.expander("Historical Brent price context (click to expand)", expanded=False):
@@ -452,7 +453,7 @@ with tab1:
             yaxis_title="Price (USD/bbl)",
             height=280,
         )
-        st.plotly_chart(fig_hist, use_container_width=True)
+        st.plotly_chart(fig_hist, width="stretch")
 
 
 # ----- Tab 2: Distribution ----------------------------------------------------
@@ -506,7 +507,7 @@ with tab2:
         yaxis_title="Probability density",
         height=440,
     )
-    st.plotly_chart(fig_dist, use_container_width=True)
+    st.plotly_chart(fig_dist, width="stretch")
 
     # Summary stats table
     st.markdown("#### Distribution percentiles")
@@ -527,7 +528,7 @@ with tab2:
             f"{(stats['p95']/S0-1)*100:+.1f}%",
         ],
     })
-    st.dataframe(perc_df, hide_index=True, use_container_width=True)
+    st.dataframe(perc_df, hide_index=True, width="stretch")
 
 
 # ----- Tab 3: Risk metrics ----------------------------------------------------
@@ -552,8 +553,8 @@ with tab3:
         cls = prob_color(val)
         st.markdown(f"""
         <div class='risk-card'>
-          <span style='color:#e6edf3;font-size:0.9rem;'>{label}</span>
-          <span class='{cls}' style='font-family:IBM Plex Mono,monospace;font-size:1.1rem;font-weight:600;'>
+          <span style='color:#1a1a1a;font-size:0.9rem;'>{label}</span>
+          <span class='{cls}' style='font-family:'Courier Prime','Courier New',monospace;font-size:1.1rem;font-weight:600;'>
             {val:.1f}{unit}
           </span>
         </div>""", unsafe_allow_html=True)
@@ -593,7 +594,7 @@ with tab3:
         height=280,
         showlegend=False,
     )
-    st.plotly_chart(fig_wt, use_container_width=True)
+    st.plotly_chart(fig_wt, width="stretch")
 
 
 # ----- Tab 4: Scenario comparison ---------------------------------------------
@@ -642,7 +643,7 @@ with tab4:
         height=420,
         hovermode="x unified",
     )
-    st.plotly_chart(fig_comp, use_container_width=True)
+    st.plotly_chart(fig_comp, width="stretch")
 
     # Scenario detail table
     st.markdown("#### Scenario parameter details")
@@ -655,7 +656,7 @@ with tab4:
             "Color": cfg["color"],
         })
     detail_df = pd.DataFrame(detail_rows).drop(columns=["Color"])
-    st.dataframe(detail_df, hide_index=True, use_container_width=True)
+    st.dataframe(detail_df, hide_index=True, width="stretch")
 
     st.divider()
     st.markdown("#### Model equations")
@@ -683,7 +684,7 @@ with tab4:
 
 st.divider()
 st.caption(
-    "Data: Yahoo Finance (yfinance) · Model: Merton jump-diffusion · "
+    "Data: EIA / FRED · Model: Merton jump-diffusion · "
     "Built with Streamlit · Hosted free on Streamlit Community Cloud · "
     "Not financial advice."
 )
