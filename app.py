@@ -12,6 +12,13 @@ import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
+def _hex_to_rgba(hex_color: str, alpha: float) -> str:
+    """Convert a hex colour string to an rgba() string for Plotly fillcolor."""
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
 from data_fetcher import (
     fetch_brent,
     calibrate_gbm,
@@ -107,7 +114,7 @@ with st.sidebar:
     )
 
     st.divider()
-    run_button = st.button("Run simulation", type="primary", use_container_width=True)
+    run_button = st.button("Run simulation", type="primary", width='stretch')
 
 
 # ---------------------------------------------------------------------------
@@ -515,7 +522,7 @@ with tab1:
         ticktext=x_dates[::tick_step],
         tickangle=-30,
     )
-    st.plotly_chart(fig_fan, use_container_width=True)
+    st.plotly_chart(fig_fan, width='stretch')
 
     # Historical context chart below
     with st.expander("Historical Brent price context (click to expand)", expanded=False):
@@ -535,7 +542,7 @@ with tab1:
             yaxis_title="Price (USD/bbl)",
             height=280,
         )
-        st.plotly_chart(fig_hist, use_container_width=True)
+        st.plotly_chart(fig_hist, width='stretch')
 
 
 # ----- Tab 2: Distribution ----------------------------------------------------
@@ -589,7 +596,7 @@ with tab2:
         yaxis_title="Probability density",
         height=440,
     )
-    st.plotly_chart(fig_dist, use_container_width=True)
+    st.plotly_chart(fig_dist, width='stretch')
 
     # Summary stats table
     st.markdown("#### Distribution percentiles")
@@ -610,7 +617,7 @@ with tab2:
             f"{(stats['p95']/S0-1)*100:+.1f}%",
         ],
     })
-    st.dataframe(perc_df, hide_index=True, use_container_width=True)
+    st.dataframe(perc_df, hide_index=True, width='stretch')
 
 
 # ----- Tab 3: Risk metrics ----------------------------------------------------
@@ -676,7 +683,7 @@ with tab3:
         height=280,
         showlegend=False,
     )
-    st.plotly_chart(fig_wt, use_container_width=True)
+    st.plotly_chart(fig_wt, width='stretch')
 
 
 # ----- Tab 4: Scenario comparison ---------------------------------------------
@@ -733,7 +740,7 @@ with tab4:
         height=420,
         hovermode="x unified",
     )
-    st.plotly_chart(fig_comp, use_container_width=True)
+    st.plotly_chart(fig_comp, width='stretch')
 
     # Scenario detail table
     st.markdown("#### Scenario parameter details")
@@ -746,7 +753,7 @@ with tab4:
             "Color": cfg["color"],
         })
     detail_df = pd.DataFrame(detail_rows).drop(columns=["Color"])
-    st.dataframe(detail_df, hide_index=True, use_container_width=True)
+    st.dataframe(detail_df, hide_index=True, width='stretch')
 
     st.divider()
     st.markdown("#### Model equations")
@@ -836,7 +843,7 @@ with tab5:
         ))
         fig_models.add_trace(go.Scatter(
             x=x_dates, y=fan["p25"], mode="lines",
-            fill="tonexty", fillcolor=color.replace("#", "rgba(") + ",0.12)",
+            fill="tonexty", fillcolor=_hex_to_rgba(color, 0.12),
             line=dict(width=0), name=f"{name} IQR",
         ))
 
@@ -872,7 +879,7 @@ with tab5:
         hovermode="x unified",
     )
 
-    st.plotly_chart(fig_models, use_container_width=True)
+    st.plotly_chart(fig_models, width='stretch')
 
     # Comparison stats table
     st.markdown("#### Model comparison statistics")
@@ -891,7 +898,7 @@ with tab5:
         })
 
     comp_df = pd.DataFrame(comparison_rows)
-    st.dataframe(comp_df, hide_index=True, use_container_width=True)
+    st.dataframe(comp_df, hide_index=True, width='stretch')
 
     # Model explanations
     st.markdown("#### Model assumptions")
