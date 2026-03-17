@@ -270,10 +270,10 @@ def run_scenario_garch(
 # ---------------------------------------------------------------------------
 
 SCENARIOS = {
-    "Low disruption":          {"lam_mult": 0.5,  "color": "#22c55e", "default_weight": 0.25},
-    "Base case":               {"lam_mult": 1.0,  "color": "#f59e0b", "default_weight": 0.40},
-    "High disruption":         {"lam_mult": 1.8,  "color": "#ef4444", "default_weight": 0.25},
-    "Extreme shock":           {"lam_mult": 3.0,  "color": "#7c3aed", "default_weight": 0.10},
+    "Low disruption":          {"lam_mult": 0.5,  "color": "#22c55e", "default_weight": 0.25, "mu_override":  0.00},
+    "Base case":               {"lam_mult": 1.0,  "color": "#f59e0b", "default_weight": 0.40, "mu_override":  0.00},
+    "High disruption":         {"lam_mult": 1.8,  "color": "#ef4444", "default_weight": 0.25, "mu_override":  0.35},
+    "Extreme shock":           {"lam_mult": 3.0,  "color": "#7c3aed", "default_weight": 0.10, "mu_override":  0.75},
 }
 
 HORIZONS = {
@@ -319,9 +319,10 @@ def blended_terminal_prices(
 
     for i, (name, cfg) in enumerate(SCENARIOS.items()):
         n_s = path_counts[name]
+        mu_eff = cfg.get("mu_override", mu)
         paths = run_scenario(
             S0=S0,
-            mu=mu,
+            mu=mu_eff,
             sigma=sigma,
             lam_multiplier=cfg["lam_mult"],
             mu_j=mu_j,

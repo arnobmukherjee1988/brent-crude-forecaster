@@ -500,7 +500,8 @@ def get_ou_params(df_json: str):
 def get_jump_params_mle(df_json: str):
     df = pd.read_json(io.StringIO(df_json))
     df.index = pd.to_datetime(df.index)
-    return calibrate_jumps_mle(df)
+    # return calibrate_jumps_mle(df)
+    return calibrate_jumps(df, jump_threshold=0.05)
 
 
 # ---------------------------------------------------------------------------
@@ -1181,3 +1182,22 @@ st.caption(
     "Built with Streamlit · Hosted free on Streamlit Community Cloud · "
     "Not financial advice."
 )
+
+# ---------------------------------------------------------------------------
+# Terminal output
+# ---------------------------------------------------------------------------
+
+import sys
+print("\n" + "="*55, file=sys.stderr)
+print(f"Brent spot: ${S0:.2f}  |  horizon: {horizon_label}  |  paths: {n_paths:,}", file=sys.stderr)
+print(f"Scenario weights: { {k: f'{v*100:.0f}%' for k, v in scenario_weights.items()} }", file=sys.stderr)
+print("-"*55, file=sys.stderr)
+for name, res in results.items():
+    if name.startswith("__"):
+        continue
+    p = res["terminal"]
+    print(f"{name:<20} median=${np.median(p):.2f}  P10=${np.percentile(p,10):.2f}  P90=${np.percentile(p,90):.2f}  P(>$120)={np.mean(p>120)*100:.1f}%", file=sys.stderr)
+print("-"*55, file=sys.stderr)
+b = blended_prices
+print(f"{'BLENDED':<20} median=${np.median(b):.2f}  P10=${np.percentile(b,10):.2f}  P90=${np.percentile(b,90):.2f}  P(>$120)={np.mean(b>120)*100:.1f}%  P(<$80)={np.mean(b<80)*100:.1f}%", file=sys.stderr)
+print("="*55, file=sys.stderr)
