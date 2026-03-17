@@ -528,7 +528,15 @@ garch_params = get_garch_params(df_json)
 ou_params = get_ou_params(df_json)
 jump_mle = get_jump_params_mle(df_json)
 
-S0     = get_latest_price(df)
+S0_data = get_latest_price(df)
+S0 = st.sidebar.number_input(
+    "Spot price ($/bbl)",
+    min_value=10.0,
+    max_value=500.0,
+    value=round(S0_data, 2),
+    step=0.01,
+    help="Auto-fetched from data source. Override if stale."
+)
 
 # Prefer MLE jump params and GARCH sigma
 mu     = gbm_params["mu"]
