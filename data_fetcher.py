@@ -3,12 +3,13 @@ Live Brent crude data fetching and parameter calibration.
 
 Source priority:
   1. Local disk cache        (if less than 15 minutes old, no network call)
-  2. Stooq CSV               (primary, no key, no rate limit, ~15 min delay)
-  3. Yahoo Finance           (fallback, no key, may rate-limit)
-  4. EIA API                 (fallback, requires EIA_API_KEY in .streamlit/secrets.toml)
-  5. FRED CSV                (fallback, no key required, 1-2 day lag)
-  6. Stale disk cache        (if all network sources fail)
-  7. Synthetic series        (absolute last resort, app still runs)
+  2. Yahoo Finance v8 API    (primary, direct HTTP with session cookie)
+  3. Yahoo Finance yfinance  (fallback, with sleep to avoid rate limit)
+  4. Stooq CSV               (fallback, no key, no rate limit)
+  5. EIA API                 (fallback, requires EIA_API_KEY in secrets.toml)
+  6. FRED CSV                (fallback, no key, 1-2 day lag)
+  7. Stale disk cache        (if all network sources fail)
+  8. Synthetic series        (absolute last resort, app always runs)
 """
 
 import io
@@ -22,12 +23,8 @@ from pathlib import Path
 from math import factorial
 
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-STOOQ_URL    = "https://stooq.com/q/d/l/?s=lco.f&i=d"
 YAHOO_TICKER = "BZ=F"
+STOOQ_URL    = "https://stooq.com/q/d/l/?s=lco.f&i=d"
 EIA_SERIES   = "PET.RBRTE.D"
 EIA_BASE_URL = "https://api.eia.gov/v2/seriesid/{series}?api_key={key}&data[]=value&frequency=daily&sort[0][column]=period&sort[0][direction]=asc&length=1000"
 FRED_URL     = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU"
@@ -35,10 +32,6 @@ FRED_URL     = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU"
 CACHE_FILE        = Path(__file__).parent / ".streamlit" / "price_cache.json"
 CACHE_TTL_SECONDS = 900
 
-
-# ---------------------------------------------------------------------------
-# Cache helpers
-# ---------------------------------------------------------------------------
 
 def _cache_is_fresh() -> bool:
     if not CACHE_FILE.exists():
@@ -65,75 +58,91 @@ def _load_cache() -> pd.DataFrame:
     )
 
 
-# ---------------------------------------------------------------------------
-# Stooq fetch (primary)
-# ---------------------------------------------------------------------------
+def _fetch_from_yahoo_v8(lookback_days: int) -> pd.DataFrame:
+    """Direct Yahoo Finance v8 API with session cookie — works on cloud servers."""
+    end   = int(datetime.now().timestamp())
+    start = int((datetime.now() - timedelta(days=lookback_days + 10)).timestamp())
+
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/json,text/html,*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://finance.yahoo.com/",
+    })
+
+    try:
+        session.get("https://finance.yahoo.com", timeout=10)
+    except Exception:
+        pass
+
+    ticker_encoded = YAHOO_TICKER.replace("=", "%3D")
+    url  = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker_encoded}?period1={start}&period2={end}&interval=1d"
+    resp = session.get(url, timeout=15)
+    resp.raise_for_status()
+
+    data   = resp.json()
+    result = data.get("chart", {}).get("result", [])
+    if not result:
+        raise ValueError("Yahoo v8 returned empty result.")
+
+    timestamps = result[0].get("timestamp", [])
+    closes     = result[0].get("indicators", {}).get("quote", [{}])[0].get("close", [])
+
+    if not timestamps or not closes:
+        raise ValueError("Yahoo v8 missing data.")
+
+    df = pd.DataFrame({"Close": closes},
+                      index=pd.to_datetime(timestamps, unit="s").normalize())
+    df = df.dropna().sort_index()
+
+    cutoff = pd.Timestamp.today() - pd.Timedelta(days=lookback_days)
+    df     = df[df.index >= cutoff]
+
+    if len(df) < 30:
+        raise ValueError(f"Yahoo v8 returned only {len(df)} rows.")
+
+    return df
+
+
+def _fetch_from_yfinance(lookback_days: int) -> pd.DataFrame:
+    import yfinance as yf
+    time.sleep(2)
+    ticker = yf.Ticker(YAHOO_TICKER)
+    raw    = ticker.history(period=f"{lookback_days}d", interval="1d", auto_adjust=True)
+    if raw.empty:
+        raise ValueError("yfinance returned empty data.")
+    df = raw[["Close"]].copy()
+    df.index = pd.to_datetime(df.index).tz_localize(None)
+    df = df.dropna().sort_index()
+    cutoff = pd.Timestamp.today() - pd.Timedelta(days=lookback_days)
+    df = df[df.index >= cutoff]
+    if len(df) < 30:
+        raise ValueError(f"yfinance returned only {len(df)} rows.")
+    return df
+
 
 def _fetch_from_stooq(lookback_days: int) -> pd.DataFrame:
     headers  = {"User-Agent": "Mozilla/5.0"}
     response = requests.get(STOOQ_URL, headers=headers, timeout=15)
     response.raise_for_status()
-
     text = response.text.strip()
     if not text or "No data" in text or len(text) < 50:
-        raise ValueError("Stooq returned empty or invalid data.")
-
+        raise ValueError("Stooq returned empty data.")
     df = pd.read_csv(io.StringIO(text), parse_dates=["Date"], index_col="Date")
-
     if "Close" not in df.columns:
-        raise ValueError(f"Stooq missing Close column. Got: {df.columns.tolist()}")
-
+        raise ValueError(f"Stooq missing Close column.")
     df     = df[["Close"]].dropna().sort_index()
     cutoff = pd.Timestamp.today() - pd.Timedelta(days=lookback_days)
     df     = df[df.index >= cutoff]
-
     if len(df) < 30:
         raise ValueError(f"Stooq returned only {len(df)} rows.")
-
     return df
 
-
-# ---------------------------------------------------------------------------
-# Yahoo Finance fetch (second source)
-# ---------------------------------------------------------------------------
-
-def _fetch_from_yahoo(lookback_days: int) -> pd.DataFrame:
-    try:
-        import yfinance as yf
-        time.sleep(1)
-        ticker = yf.Ticker(YAHOO_TICKER)
-        raw    = ticker.history(period=f"{lookback_days}d", interval="1d", auto_adjust=True)
-        if raw.empty:
-            raise ValueError("yfinance returned empty data.")
-        df = raw[["Close"]].copy()
-        df.index = pd.to_datetime(df.index).tz_localize(None)
-
-    except ImportError:
-        end  = datetime.today()
-        p1   = int((end - timedelta(days=lookback_days + 10)).timestamp())
-        p2   = int(end.timestamp())
-        url  = (
-            f"https://query1.finance.yahoo.com/v7/finance/download/{YAHOO_TICKER}"
-            f"?period1={p1}&period2={p2}&interval=1d&events=history"
-        )
-        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
-        resp.raise_for_status()
-        df = pd.read_csv(io.StringIO(resp.text), parse_dates=["Date"], index_col="Date")
-        df = df[["Close"]]
-
-    df     = df.dropna().sort_index()
-    cutoff = pd.Timestamp.today() - pd.Timedelta(days=lookback_days)
-    df     = df[df.index >= cutoff]
-
-    if len(df) < 30:
-        raise ValueError(f"Yahoo returned only {len(df)} rows.")
-
-    return df
-
-
-# ---------------------------------------------------------------------------
-# EIA fetch (third source)
-# ---------------------------------------------------------------------------
 
 def _get_eia_key() -> str:
     try:
@@ -147,37 +156,26 @@ def _fetch_from_eia(lookback_days: int) -> pd.DataFrame:
     key = _get_eia_key()
     if not key:
         raise ValueError("EIA_API_KEY not found.")
-
     response = requests.get(EIA_BASE_URL.format(series=EIA_SERIES, key=key), timeout=15)
     response.raise_for_status()
-
     rows = response.json().get("response", {}).get("data", [])
     if not rows:
         raise ValueError("EIA returned empty data.")
-
     df = pd.DataFrame(rows)[["period", "value"]]
     df.columns  = ["date", "Close"]
     df["date"]  = pd.to_datetime(df["date"])
     df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
     df          = df.dropna().set_index("date").sort_index()
-
     cutoff = pd.Timestamp.today() - pd.Timedelta(days=lookback_days)
     df     = df[df.index >= cutoff]
-
     if len(df) < 30:
         raise ValueError(f"EIA returned only {len(df)} rows.")
-
     return df
 
-
-# ---------------------------------------------------------------------------
-# FRED fetch (fourth source)
-# ---------------------------------------------------------------------------
 
 def _fetch_from_fred(lookback_days: int) -> pd.DataFrame:
     response = requests.get(FRED_URL, timeout=15)
     response.raise_for_status()
-
     df = pd.read_csv(
         io.StringIO(response.text),
         parse_dates=["DATE"],
@@ -187,19 +185,12 @@ def _fetch_from_fred(lookback_days: int) -> pd.DataFrame:
     df.index.name = None
     df.columns    = ["Close"]
     df            = df.dropna().sort_index()
-
     cutoff = pd.Timestamp.today() - pd.Timedelta(days=lookback_days)
     df     = df[df.index >= cutoff]
-
     if len(df) < 30:
         raise ValueError(f"FRED returned only {len(df)} rows.")
-
     return df
 
-
-# ---------------------------------------------------------------------------
-# Main public function
-# ---------------------------------------------------------------------------
 
 def fetch_brent(lookback_days: int = 730) -> pd.DataFrame:
     """
@@ -210,8 +201,9 @@ def fetch_brent(lookback_days: int = 730) -> pd.DataFrame:
         return _load_cache()
 
     for fetcher in [
+        lambda: _fetch_from_yahoo_v8(lookback_days),
+        lambda: _fetch_from_yfinance(lookback_days),
         lambda: _fetch_from_stooq(lookback_days),
-        lambda: _fetch_from_yahoo(lookback_days),
         lambda: _fetch_from_eia(lookback_days),
         lambda: _fetch_from_fred(lookback_days),
     ]:
@@ -232,10 +224,6 @@ def fetch_brent(lookback_days: int = 730) -> pd.DataFrame:
     closes = 97.0 * np.exp(np.cumsum(rng.normal(0.0005, 0.02, len(dates))))
     return pd.DataFrame({"Close": closes}, index=dates)
 
-
-# ---------------------------------------------------------------------------
-# Parameter calibration
-# ---------------------------------------------------------------------------
 
 def calibrate_gbm(df: pd.DataFrame, window: int = 60) -> dict:
     closes      = df["Close"].values.astype(float)
@@ -267,7 +255,7 @@ def calibrate_jumps(df: pd.DataFrame, jump_threshold: float = 0.05) -> dict:
             "method":  "threshold_default",
         }
 
-    mu_j = float(np.mean(jump_returns))
+    mu_j    = float(np.mean(jump_returns))
     sigma_j = float(np.std(jump_returns, ddof=1))
     lam     = float(jump_mask.sum() / len(lr) * 252)
 
